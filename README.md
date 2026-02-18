@@ -2,6 +2,12 @@
 
 Ohm is a clipboard history manager build in Rust + Tauri v2 + React.
 
+
+
+
+https://github.com/user-attachments/assets/0a547712-44ed-47e6-b7b5-28135f998297
+
+
 ## Features
 - Clipboard history managed through sqlite
 - Global hotkey (`Ctrl + Shift + v`) to opens the paste picker
