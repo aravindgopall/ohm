@@ -6,7 +6,8 @@ export default function App() {
 
   return (
     <div style={{ padding: 24, fontFamily: "system-ui, sans-serif" }}>
-      <h2>MyClipboard</h2>
+      <h2>Ohm (One-Hotkey Manager)</h2>
+      <p> Please feel free to minimize this and run it in background...</p>
       <p>Press Ctrl+Shift+V to open the paste picker.</p>
     </div>
   );
