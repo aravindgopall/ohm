@@ -1,0 +1,212 @@
+/* Base tokens (Light) */
+:root {
+  --bg: #0b0f19; /* will be overridden by light unless system dark */
+  --surface: #111827;
+  --surface2: #0f172a;
+  --border: rgba(255,255,255,.10);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.62);
+  --shadow: 0 18px 55px rgba(0,0,0,.55);
+  --rowHover: rgba(255,255,255,.06);
+  --rowActive: rgba(255,255,255,.10);
+  --accent: #7c3aed; /* purple */
+  --accent2: #22c55e; /* green */
+  --danger: #ef4444;
+  --input: rgba(255,255,255,.06);
+  --chip: rgba(255,255,255,.08);
+  --focus: rgba(124, 58, 237, .35);
+
+  color-scheme: dark;
+}
+
+/* Light mode */
+[data-theme="light"] {
+  --bg: #f7f7fb;
+  --surface: #ffffff;
+  --surface2: #f3f4f6;
+  --border: rgba(0,0,0,.10);
+  --text: rgba(17,24,39,.92);
+  --muted: rgba(17,24,39,.60);
+  --shadow: 0 18px 55px rgba(0,0,0,.12);
+  --rowHover: rgba(0,0,0,.04);
+  --rowActive: rgba(124,58,237,.10);
+  --input: rgba(0,0,0,.04);
+  --chip: rgba(0,0,0,.05);
+  --focus: rgba(124, 58, 237, .22);
+
+  color-scheme: light;
+}
+
+/* System preference (default when no data-theme attribute) */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f7f7fb;
+    --surface: #ffffff;
+    --surface2: #f3f4f6;
+    --border: rgba(0,0,0,.10);
+    --text: rgba(17,24,39,.92);
+    --muted: rgba(17,24,39,.60);
+    --shadow: 0 18px 55px rgba(0,0,0,.12);
+    --rowHover: rgba(0,0,0,.04);
+    --rowActive: rgba(124,58,237,.10);
+    --input: rgba(0,0,0,.04);
+    --chip: rgba(0,0,0,.05);
+    --focus: rgba(124, 58, 237, .22);
+
+    color-scheme: light;
+  }
+}
+
+* { box-sizing: border-box; }
+
+.pickerRoot {
+  height: 100vh;
+  background: radial-gradient(1200px 800px at 20% 0%, rgba(124,58,237,.18), transparent 55%),
+              radial-gradient(1200px 800px at 80% 0%, rgba(34,197,94,.12), transparent 55%),
+              var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  padding: 16px 16px 10px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+}
+.brandTitle {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .2px;
+}
+.brandSub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.searchWrap {
+  flex: 1;
+  position: relative;
+}
+.search {
+  width: 100%;
+  background: var(--input);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 11px 12px;
+  outline: none;
+}
+.search:focus {
+  border-color: rgba(124,58,237,.5);
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
+.chip {
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  background: var(--chip);
+  padding: 7px 10px;
+  border-radius: 12px;
+  user-select: none;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--chip);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(1px); }
+
+.panel {
+  margin: 0 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  backdrop-filter: blur(8px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.list {
+  overflow: auto;
+  flex: 1;
+}
+
+.row {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.row:hover { background: var(--rowHover); }
+.rowActive { background: var(--rowActive); }
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pill {
+  font-size: 11px;
+  border: 1px solid var(--border);
+  background: var(--chip);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+  font-size: 13px;
+}
+
+.empty {
+  padding: 18px;
+  color: var(--muted);
+}
+
+.footer {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,.06);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.toast {
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+}

@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { listClips, selectClip } from "../api";
-import type { Clip }  from "../api";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { listClips, selectClip, hidePicker } from "../api";
+import type { Clip } from "../api";
+import { useTheme } from "./useTheme";
+import "./picker.css";
 
 function platformHint() {
   const isMac = navigator.userAgent.toLowerCase().includes("mac");
@@ -12,59 +14,62 @@ export default function PastePicker() {
   const [clips, setClips] = useState<Clip[]>([]);
   const [idx, setIdx] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const rowRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const { cycle, label } = useTheme();
 
+  async function refresh(q?: string) {
+    const data = await listClips(250, q);
+    setClips(data);
+    setIdx((old) => Math.min(old, Math.max(0, data.length - 1)));
+  }
+
+  // Initial + focus/visibility refresh
+  useEffect(() => {
+    refresh().catch(console.error);
+    setTimeout(() => inputRef.current?.focus(), 30);
+
+    const onVis = () => {
+      if (!document.hidden) {
+        refresh(query).catch(console.error);
+        setTimeout(() => inputRef.current?.focus(), 30);
+      }
+    };
+    const onFocus = () => refresh(query).catch(console.error);
+
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onFocus);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const t = setTimeout(() => refresh(query).catch(console.error), 120);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // Scroll selected row into view
   useEffect(() => {
     rowRefs.current[idx]?.scrollIntoView({ block: "nearest" });
   }, [idx]);
 
-  useEffect(() => {
-    const onVis = () => {
-        // When the window becomes visible again, reload newest clips
-        if (!document.hidden) {
-        refresh(query).catch(console.error);
-        setTimeout(() => inputRef.current?.focus(), 30);
-        }
-    };
-
-    const onFocus = () => {
-        refresh(query).catch(console.error);
-    };
-
-    document.addEventListener("visibilitychange", onVis);
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-        document.removeEventListener("visibilitychange", onVis);
-        window.removeEventListener("focus", onFocus);
-    };
-  }, [query]);
-
-
-  async function refresh(q?: string) {
-    const data = await listClips(200, q);
-    setClips(data);
-    setIdx(0);
-  }
-
-  useEffect(() => {
-    refresh();
-    // focus search on mount
-    setTimeout(() => inputRef.current?.focus(), 50);
-  }, []);
-
-  useEffect(() => {
-    const t = setTimeout(() => refresh(query), 120);
-    return () => clearTimeout(t);
-  }, [query]);
-
   const selected = useMemo(() => clips[idx], [clips, idx]);
 
   async function onSelect(c: Clip) {
-    const res = await selectClip(c.id);
-    if (!res.pasted) {
-      setToast(`Copied. Press ${platformHint()} to paste. (Enable Accessibility/permissions for auto-paste)`);
+    try {
+      const res = await selectClip(c.id);
+      if (!res.pasted) {
+        setToast(`Copied. Press ${platformHint()} to paste. (Enable permissions for auto-paste)`);
+        setTimeout(() => setToast(null), 2500);
+      }
+    } catch (e: any) {
+      console.error(e);
+      setToast(`Error: ${e?.message ?? String(e)}`);
       setTimeout(() => setToast(null), 2500);
     }
   }
@@ -81,56 +86,72 @@ export default function PastePicker() {
         e.preventDefault();
         if (selected) onSelect(selected);
       } else if (e.key === "Escape") {
-        // Optional: just close/hide window from UI later (can add a "hide_picker" command)
-        // For now, user can click away; you can wire a hide command easily.
+        e.preventDefault();
+        hidePicker().catch(console.error);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [clips, selected]);
+  }, [clips.length, selected]);
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search clipboard history…"
-          style={{ flex: 1, padding: 10, fontSize: 14 }}
-        />
-        <div style={{ fontSize: 12, opacity: 0.7 }}>Ctrl+Shift+V</div>
+    <div className="pickerRoot">
+      <div className="topbar">
+        <div className="brand">
+          <div className="brandTitle">Paste Picker</div>
+          <div className="brandSub">Search • ↑↓ • Enter • Esc</div>
+        </div>
+
+        <div className="searchWrap">
+          <input
+            ref={inputRef}
+            className="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search clipboard history…  (Ctrl/⌘K to focus)"
+          />
+        </div>
+
+        <button className="btn" onClick={cycle} title="Toggle theme">
+          Theme: {label}
+        </button>
+
+        <div className="chip">Ctrl+Shift+V</div>
       </div>
 
-      {toast && (
-        <div style={{ marginTop: 10, padding: 10, border: "1px solid #ccc", borderRadius: 8 }}>
-          {toast}
-        </div>
-      )}
+      {toast && <div className="toast">{toast}</div>}
 
-      <div style={{ marginTop: 12, border: "1px solid #ddd", borderRadius: 10, overflow: "hidden" }}>
-        {clips.length === 0 ? (
-          <div style={{ padding: 16, opacity: 0.7 }}>No clipboard items yet.</div>
-        ) : (
-          clips.map((c, i) => (
-            <div
-              key={c.id}
-              ref={(el) => (rowRefs.current[i] = el)}
-              onClick={() => onSelect(c)}
-              style={{
-                padding: 12,
-                cursor: "pointer",
-                background: i === idx ? "rgba(0,0,0,0.06)" : "transparent",
-                borderBottom: "1px solid #eee",
-              }}
-            >
-              <div style={{ fontSize: 12, opacity: 0.6 }}>#{c.id}</div>
-              <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                {c.content.length > 280 ? c.content.slice(0, 280) + "…" : c.content}
+      <div className="panel">
+        <div className="list">
+          {clips.length === 0 ? (
+            <div className="empty">No clipboard items yet.</div>
+          ) : (
+            clips.map((c, i) => (
+              <div
+                key={c.id}
+                ref={(el) => (rowRefs.current[i] = el)}
+                onClick={() => onSelect(c)}
+                className={`row ${i === idx ? "rowActive" : ""}`}
+              >
+                <div className="meta">
+                  <span className="pill">#{c.id}</span>
+                  <span className="pill">{c.content.length} chars</span>
+                </div>
+                <div className="content">
+                  {c.content.length > 420 ? c.content.slice(0, 420) + "…" : c.content}
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
+
+        <div className="footer">
+          <div className="hint">Tip: Ctrl/⌘K focuses search</div>
+          <div className="hint">Esc closes</div>
+        </div>
       </div>
     </div>
   );

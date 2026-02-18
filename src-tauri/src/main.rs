@@ -80,6 +80,14 @@ fn restore_previous_focus(state: &AppState) {
 }
 
 #[tauri::command]
+fn hide_picker(app: tauri::AppHandle) -> Result<(), String> {
+  if let Some(picker) = app.get_webview_window("picker") {
+    let _ = picker.hide();
+  }
+  Ok(())
+}
+
+#[tauri::command]
 fn list_clips(state: State<AppState>, limit: i64, query: Option<String>) -> Result<Vec<db_mod::Clip>, String> {
   db_mod::list_clips(&state.db_path, limit, query).map_err(|e| e.to_string())
 }
@@ -170,7 +178,7 @@ fn main() {
 
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![list_clips, select_clip])
+    .invoke_handler(tauri::generate_handler![list_clips, select_clip, hide_picker])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

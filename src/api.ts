@@ -13,3 +13,7 @@ export async function listClips(limit = 200, query?: string): Promise<Clip[]> {
 export async function selectClip(id: number): Promise<{ pasted: boolean }> {
   return await invoke<{ pasted: boolean }>("select_clip", { id });
 }
+
+export async function hidePicker(): Promise<void> {
+  await invoke("hide_picker");
+}
