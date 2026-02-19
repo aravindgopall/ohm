@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listClips, selectClip, hidePicker } from "../api";
 import type { Clip } from "../api";
 import { useTheme } from "./useTheme";
@@ -132,7 +132,7 @@ export default function PastePicker() {
             clips.map((c, i) => (
               <div
                 key={c.id}
-                ref={(el) => (rowRefs.current[i] = el)}
+                ref={(el) => {rowRefs.current[i] = el;}}
                 onClick={() => onSelect(c)}
                 className={`row ${i === idx ? "rowActive" : ""}`}
               >

@@ -38,4 +38,7 @@ cargo tauri build  # this generates the image for the corresponding os.
 - Select the corresponding message through arrow or search and press enter. This would copy the message and also auto paste to last focus window.
 
 ## TODO
-- [ ] Test Auto paste in Windows/Linux 
+- [ ] Test Auto paste in Windows/Linux
+- [ ] Custom Key Mapping
+- [ ] Delete clipboard history (through date or individually)
+- [ ] 
