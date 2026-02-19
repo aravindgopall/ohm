@@ -1,0 +1,85 @@
+name: publish
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS (Apple Silicon)
+          - platform: macos-latest
+            args: "--target aarch64-apple-darwin"
+
+          # macOS (Intel)
+          - platform: macos-latest
+            args: "--target x86_64-apple-darwin"
+
+          # Linux (x64)
+          - platform: ubuntu-22.04
+            args: ""
+
+          # Windows (x64)
+          - platform: windows-latest
+            args: ""
+
+          # Optional: Linux ARM64 (ONLY available in public repos)
+          # - platform: ubuntu-22.04-arm
+          #   args: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: "npm"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Only needed on macOS runners for the extra targets.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # If you DO NOT have `beforeBuildCommand` configured in tauri.conf.json,
+      # uncomment the next step:
+      # - name: Build frontend
+      #   run: npm run build
+
+      - name: Build & publish (draft release)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Ohm v__VERSION__"
+          releaseBody: "See the assets below to download and install this version."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
