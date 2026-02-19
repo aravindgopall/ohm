@@ -169,7 +169,7 @@ fn main() {
                 handle
                     .plugin(
                         tauri_plugin_global_shortcut::Builder::new()
-                            .with_shortcuts(["Ctrl+Shift+V"])
+                            .with_shortcuts(["Ctrl+Shift+V", "Cmd+Shift+V"])
                             .map_err(|e| e.to_string())?
                             .with_handler(move |app, shortcut, event| {
                                 if event.state != ShortcutState::Pressed {
