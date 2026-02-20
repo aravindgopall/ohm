@@ -10,6 +10,9 @@ use std::sync::Mutex;
 use tauri::{Manager, State};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
+#[cfg(not (target_os = "macos"))]
+use x11rb::connection::Connection;
+
 // #[derive(Clone)]
 struct AppState {
     db_path: std::path::PathBuf,
@@ -39,7 +42,7 @@ fn restore_previous_focus(state: &AppState) {
         return;
     }
     let w = w.unwrap();
-
+    
     #[cfg(target_os = "windows")]
     {
         use windows_sys::Win32::Foundation::HWND;
@@ -47,8 +50,9 @@ fn restore_previous_focus(state: &AppState) {
 
         // active-win-pos-rs gives window_id as String
         if let Ok(hwnd_i64) = w.window_id.parse::<i64>() {
+            let hwnd: HWND = hwnd_i64 as isize as HWND;
             unsafe {
-                SetForegroundWindow(HWND(hwnd_i64 as isize));
+                SetForegroundWindow(hwnd);
             }
         }
     }
