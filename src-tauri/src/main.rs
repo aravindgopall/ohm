@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use tauri::{Manager, State};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
-#[cfg(not (target_os = "macos"))]
+#[cfg(all(unix, not (target_os = "macos")))]
 use x11rb::connection::Connection;
 
 // #[derive(Clone)]
